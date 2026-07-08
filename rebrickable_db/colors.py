@@ -49,3 +49,14 @@ def load() -> List[Color]:
 
 	return data
 
+
+@functools.lru_cache(1)
+def load_colour_map() -> Dict[int, int]:
+	colour_map_json: List[dict] = json.loads(importlib_resources.read_text("rebrickable_db.data", "colours.json"))
+	ldraw_to_rebrickable = {}
+	for row in colour_map_json:
+		for ldraw_id in row["external_ids"].get("LDraw", {}).get("ext_ids", []):
+			ldraw_to_rebrickable[ldraw_id] = int(row["id"])
+
+	return MappingProxyType(ldraw_to_rebrickable)
+
