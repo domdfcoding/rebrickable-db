@@ -22,3 +22,6 @@ python_versions:
  - "3.11"
  - "3.12"
  - "3.13"
+
+manifest_additional:
+  - recursive-include rebrickable_db/data *.csv.gz

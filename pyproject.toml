@@ -29,6 +29,7 @@ python-implementations = [ "CPython",]
 platforms = [ "Windows", "macOS", "Linux",]
 license-key = "MIT"
 package = "rebrickable_db"
+additional-files = [ "recursive-include rebrickable_db/data *.csv.gz",]
 
 [tool.importcheck]
 
