@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #
-#  colors.py
+#  sets.py
 """
-Data on LEGO colours.
+Data on LEGO sets.
 """
 #
 #  Copyright © 2026 Dominic Davis-Foster <dominic@davis-foster.co.uk>
@@ -28,73 +28,40 @@ Data on LEGO colours.
 
 # stdlib
 import functools
-import json
 import typing
-from types import MappingProxyType
-from typing import TYPE_CHECKING, List, Mapping, NamedTuple
-
-# 3rd party
-from domdf_python_tools.compat import importlib_resources
+from typing import List, NamedTuple
 
 # this package
 from rebrickable_db.utils import gzip_csv_reader
 
-if TYPE_CHECKING:
-	_int_empty = int
-else:
-
-	def _int_empty(val: str) -> int:
-		if not val:
-			return -1
-
-		return int(val)
+__all__ = ["Set", "load"]
 
 
-__all__ = ["Color", "load", "load_colour_map"]
-
-
-class Color(NamedTuple):
+class Set(NamedTuple):
 	"""
-	Represents a Rebrickable colour.
+	Represents a set.
 	"""
 
-	id: int
+	set_num: str
 	name: str
-	rgb: str
-	is_trans: bool
+	year: int
+	theme_id: int
 	num_parts: int
-	num_sets: int
-	y1: _int_empty
-	y2: _int_empty
+	img_url: str
 
 
 @functools.lru_cache(1)
-def load() -> List[Color]:
+def load() -> List[Set]:
 	"""
-	Load the list of colours.
+	Load the list of sets.
 	"""
 
-	annotations = typing.get_type_hints(Color)
+	annotations = typing.get_type_hints(Set)
 	print(annotations)
 	data = []
 
-	with gzip_csv_reader("colors.csv.gz") as reader:
+	with gzip_csv_reader("sets.csv.gz") as reader:
 		for row in reader:
-			data.append(Color(**{k: annotations[k](v) for k, v in row.items()}))
+			data.append(Set(**{k: annotations[k](v) for k, v in row.items()}))
 
 	return data
-
-
-@functools.lru_cache(1)
-def load_colour_map() -> Mapping[int, int]:
-	"""
-	Load the mapping of Rebrickable colours to other LDraw colours.
-	"""
-
-	colour_map_json: List[dict] = json.loads(importlib_resources.read_text("rebrickable_db.data", "colours.json"))
-	ldraw_to_rebrickable = {}
-	for row in colour_map_json:
-		for ldraw_id in row["external_ids"].get("LDraw", {}).get("ext_ids", []):
-			ldraw_to_rebrickable[ldraw_id] = int(row["id"])
-
-	return MappingProxyType(ldraw_to_rebrickable)

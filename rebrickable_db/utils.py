@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #
-#  elements.py
+#  utils.py
 """
-List of lego elements with part number, colour and element ID.
+General utilities.
 """
 #
 #  Copyright © 2026 Dominic Davis-Foster <dominic@davis-foster.co.uk>
@@ -27,40 +27,27 @@ List of lego elements with part number, colour and element ID.
 #
 
 # stdlib
-import functools
-import typing
-from collections import defaultdict
-from types import MappingProxyType
-from typing import Dict, Mapping, NamedTuple, Sequence
+import csv
+import gzip
+from contextlib import contextmanager
+from typing import Iterator
 
-# this package
-from rebrickable_db.utils import gzip_csv_reader
+# 3rd party
+from domdf_python_tools.compat import importlib_resources
 
-__all__ = ["Element", "load"]
+__all__ = ["gzip_csv_reader"]
 
 
-class Element(NamedTuple):
+@contextmanager
+def gzip_csv_reader(filename: str) -> Iterator[csv.DictReader]:
 	"""
-	Represents a LEGO element (part and colour combination).
-	"""
+	Read a gzipped CSV file.
 
-	element_id: int
-	part_num: str  # Encodes printing
-	color_id: int
-	design_id: str  # Just the mould
-
-
-@functools.lru_cache(1)
-def load() -> Sequence[Element]:
-	"""
-	Load the list of elements.
+	:param filename: The name of the resource in the package.
 	"""
 
-	annotations = typing.get_type_hints(Element)
-	data = []
-
-	with gzip_csv_reader("elements.csv.gz") as reader:
-		for row in reader:
-			data.append(Element(**{k: annotations[k](v) for k, v in row.items()}))
-
-	return tuple(data)
+	with gzip.open(
+			importlib_resources.files("rebrickable_db.data") / filename,
+			"rt",
+			) as f:  # type: ignore[call-overload]
+		yield csv.DictReader(f)
