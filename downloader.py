@@ -4,8 +4,8 @@ import posixpath
 from urllib.parse import urlparse
 
 # 3rd party
-from domdf_python_tools.paths import PathPlus
 import requests
+from domdf_python_tools.paths import PathPlus
 
 output_dir = PathPlus("rebrickable_db/data")
 output_dir.mkdir(exist_ok=True, parents=True)
@@ -32,17 +32,18 @@ for link in [
 
 # Colour mapping data; requires API key
 
-resp = requests.get("https://rebrickable.com/api/v3/lego/colors/", headers={"Accept": "application/json", "Authorization": f"key {os.environ['REBRICKABLE_API_KEY']}"})
+headers = {"Accept": "application/json", "Authorization": f"key {os.environ['REBRICKABLE_API_KEY']}"}
+
+resp = requests.get("https://rebrickable.com/api/v3/lego/colors/", headers=headers)
 resp.raise_for_status()
 resp_json: dict = resp.json()
 colours_json: list = resp_json["results"]
 
 while resp_json.get("next"):
-	resp = requests.get(resp_json["next"], headers={"Accept": "application/json", "Authorization": f"key {os.environ['REBRICKABLE_API_KEY']}"})
+	resp = requests.get(resp_json["next"], headers=headers)
 	resp.raise_for_status()
 	resp_json = resp.json()
 	colours_json.extend(resp_json["results"])
 
 output_file = output_dir / "colours.json"
 output_file.dump_json(colours_json, indent=2)
-
